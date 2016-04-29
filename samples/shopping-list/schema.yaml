@@ -1,18 +1,13 @@
 schema_id: 877cd6d9-f569-4fb7-9680-616758d9bb1d
-schema_name: shopping_list
 schema_version: 1.0
 
-shopping_item: &shopping_item
-  type: {}
-  keys:
-    type: ''
-    min_length: 1
-    regex: /[-a-zA-Z, 0-9]+/
-  values:
-    type: 0
-    min: 1
-
-type: []
-items:
-  type: *shopping_item 
+shopping_list:
+  items:
+    fields:
+      - name: !!str
+      - amount: number
+    # "units" is an optional extra field
+    extras:
+      - type: !!str
+      - max_length: 1
 

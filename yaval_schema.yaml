@@ -1,0 +1,111 @@
+# Metadata for this schema
+
+schema_id: b1dcd6d9-9680-4fb7-f569-616758d9b877
+schema_version: 1.0
+
+# The "patterns" attribute defines one or more structures that we use to build
+# more complex structures. Typically, schemas will define low-level constructs
+# first, and then develop higher-level constructs from those building blocks.
+patterns:
+  
+  # A schema_id may not be desirable for schema fragments -- but it is highly
+  # recommended for standalone, complete schemas. It gives schemas an
+  # unambiguous identity across versions, locations, and name changes.
+  - schema_id:
+    type: !!str # ids are strings
+    # format is compliant with RFC 4122
+    regex: /[a-fA-F0-9]{8}-?([a-fA-F0-9]{4}-?){3}[a-fA-F0-9]{12}/
+    
+  # Using semantic versioning to track evolution is a schema best practice;
+  # see http://semver.org.
+  - schema_version:
+    type: !!str
+    # format is 1-3 dot-delimited numbers, optionally followed by -<label>
+    regex: /\d+(\.\d+){,2}(-[-_a-zA-Z+])/ 
+    
+  # The major building block of all schemas is a node_def. It can be used for
+  # a full schema, or any subtree thereof.
+  - node_def:
+    # A node_def is a map (although the structure it describes may be almost
+    # anything). Here we list the names and semantics for any keys that
+    # it may contain.
+    keys:
+      # It is possible to explicitly declare the data type for a node. Often
+      # this is unnecessary, though, because some other attribute of the node
+      # implies its type. For example, nodes that have a "keys" attribute
+      # are maps; nodes that have an "items" attribute are sequences. Valid
+      # values for type are yaml datatypes from its core or json schemas, as
+      # well any key in the patterns section of the schema, or a uri that
+      # grafts in another schema at this location.
+      - type: !!str
+      # If a node_def contains a key named "items", the node it defines is a
+      # yaml sequence, and the value of "items" is a node_def that stipulates
+      # structure of all items in the sequence. 
+      - items: node_def
+      # If a node_def contains a key named "keys", the node it defines is a
+      # yaml map, and the value of "keys" is a sequence of node_def items
+      # that the map may hold. Keys are optional by default; this can be
+      # overridden with the "required" list (see below). Notice that we are
+      # inside the "keys" key of a node_def right now, so we used this pattern
+      # to get here...
+      - keys: []
+      # If a node_def contains a key named "fields", the node it defines is a
+      # yaml sequence, and its parent node was also a sequence. The parent
+      # node effectively holds rows, and the node being defined holds columns.
+      # The value of "fields" is a sequence of node_def items that defines
+      # the columns. Unlike "keys", "fields" are always ordered and required.
+      # To allow extra fields beyond the optional ones (ragged rows in a
+      # table), use "extras" (see below).
+      - fields: []
+      # Lists keys that must appear in a map.
+      - required: []
+      # If a node_def contains a key named "regex", then the node it defines
+      # has string values. The regex constrains them, and must begin and end
+      # with /. The regex must match the entire value, not just a subset.
+      - regex: !!str
+      # For scalars that sort, this is the smallest acceptable value. No type
+      # is specified, meaning that the definer of a schema can use it with any
+      # type that makes sense.
+      - min
+      # For scalars that sort, this is the exclusive min--the largest value
+      # that is less than what's acceptable. For example, floating point
+      # ratios that must be greater than 0 would declare an xmin of 0.0.
+      - xmin
+      # For scalars that sort, this is the largest acceptable value.
+      - max
+      # For scalars that sort, this is the exclusive max--the smallest value
+      # that is greater than what's acceptable.
+      - xmax
+      # An upper bound on length. This may be used with any data type that has
+      # an integral length: strings, sequences, maps, sets, and so forth.
+      - max_length: !!int
+      # A lower bound on length.
+      - min_length: !!int
+      # This may be included to illustrate valid values.
+      - samples: !!seq
+      # A value that should be assumed for the node, if none is provided.
+      - default
+      # If a node is a container (a sequence, a map, an enum, etc), this key
+      # defines how extra members are handled. If "extras" does not appear,
+      # then extra members are disallowed.
+      - extras: node_def
+              
+# Okay, now that we have defined our patterns, here is the top-level entity
+# for the current schema--a data structure named "yaval_schema".
+yaval_schema: node_def
+  keys:
+    # A yaval_schema has an optional attribute named "schema_id", and its type
+    # is defined by the "schema_id" pattern above.
+    - schema_id: schema_id
+    # A yaval_schema has an optional attribute named "schema_version", and its
+    # type is defined by the "schema_version" pattern above.
+    - schema_version: schema_version
+    # A yaval_schema has an optional attribute named "patterns", which is a
+    # sequence.
+    - patterns: !!seq
+    # A yaval_schema has one additional attribute. Its name is not predefined,
+    # -- but whatever it is, this will be the root or top-level construct of
+    # the schema.
+    - extras:
+        max_length: 1
+        min_length: 1
