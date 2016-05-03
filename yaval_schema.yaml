@@ -1,7 +1,20 @@
 # Metadata for this schema
 
 schema_id: b1dcd6d9-9680-4fb7-f569-616758d9b877
-schema_version: 1.0
+schema_version: "1.0"
+
+# This yaml doc has meaning on two separate levels:
+#   1. It defines the structure of yaval schemas.
+#   2. It serves as an example of a yaval schema, because it defines
+#      its own structure according to yaval rules. In other words,
+#      the yaval schema is, itself, a yaval schema.
+# This overloaded, recursive sort of structure can get a bit confusing, but
+# don't get lost in the details. It's simpler than it looks.
+
+# What is the minimum version of the yaval spec that this schema validates
+# against? The expectation is that this schema (doc) should validate against
+# any version of the spec that has the same major version number.
+min_yaval_version: "1.0"
 
 # The "patterns" attribute defines one or more structures that we use to build
 # more complex structures. Typically, schemas will define low-level constructs
@@ -11,17 +24,18 @@ patterns:
   # A schema_id may not be desirable for schema fragments -- but it is highly
   # recommended for standalone, complete schemas. It gives schemas an
   # unambiguous identity across versions, locations, and name changes.
+  # Must be compared case-insensitive and with all punctuation ignored.
   - schema_id:
-    type: !!str # ids are strings
+    type: '' # ids are strings
     # format is compliant with RFC 4122
-    regex: /[a-fA-F0-9]{8}-?([a-fA-F0-9]{4}-?){3}[a-fA-F0-9]{12}/
+    regex: /^(?i)[a-f0-9]{8}-?([a-f0-9]{4}-?){3}[a-f0-9]{12}$/
     
   # Using semantic versioning to track evolution is a schema best practice;
-  # see http://semver.org.
+  # see http://semver.org. Must be compared case-insensitive.
   - schema_version:
-    type: !!str
+    type: ''
     # format is 1-3 dot-delimited numbers, optionally followed by -<label>
-    regex: /\d+(\.\d+){,2}(-[-_a-zA-Z+])/ 
+    regex: /^(?i)\d+(\.\d+){0,2}(-[-_a-z]+)?$/
     
   # The major building block of all schemas is a node_def. It can be used for
   # a full schema, or any subtree thereof.
@@ -37,7 +51,7 @@ patterns:
       # values for type are yaml datatypes from its core or json schemas, as
       # well any key in the patterns section of the schema, or a uri that
       # grafts in another schema at this location.
-      - type: !!str
+      - type: ''
       # If a node_def contains a key named "items", the node it defines is a
       # yaml sequence, and the value of "items" is a node_def that stipulates
       # structure of all items in the sequence. 
@@ -60,9 +74,10 @@ patterns:
       # Lists keys that must appear in a map.
       - required: []
       # If a node_def contains a key named "regex", then the node it defines
-      # has string values. The regex constrains them, and must begin and end
-      # with /. The regex must match the entire value, not just a subset.
-      - regex: !!str
+      # has string values. The regex constrains them. It must match somewhere
+      # in the value (like grep); to force it to match the full value, begin
+      # the regex with ^ and end it with $.
+      - regex: ''
       # For scalars that sort, this is the smallest acceptable value. No type
       # is specified, meaning that the definer of a schema can use it with any
       # type that makes sense.
@@ -78,11 +93,13 @@ patterns:
       - xmax
       # An upper bound on length. This may be used with any data type that has
       # an integral length: strings, sequences, maps, sets, and so forth.
-      - max_length: !!int
+      - max_length: 0
       # A lower bound on length.
-      - min_length: !!int
+      - min_length: 0
+      # Require that a numeric value be a multiple of some smaller factor.
+      - multiple_of: 0
       # This may be included to illustrate valid values.
-      - samples: !!seq
+      - samples: []
       # A value that should be assumed for the node, if none is provided.
       - default
       # If a node is a container (a sequence, a map, an enum, etc), this key
@@ -92,7 +109,7 @@ patterns:
               
 # Okay, now that we have defined our patterns, here is the top-level entity
 # for the current schema--a data structure named "yaval_schema".
-yaval_schema: node_def
+yaval_schema:
   keys:
     # A yaval_schema has an optional attribute named "schema_id", and its type
     # is defined by the "schema_id" pattern above.
@@ -102,7 +119,7 @@ yaval_schema: node_def
     - schema_version: schema_version
     # A yaval_schema has an optional attribute named "patterns", which is a
     # sequence.
-    - patterns: !!seq
+    - patterns: []
     # A yaval_schema has one additional attribute. Its name is not predefined,
     # -- but whatever it is, this will be the root or top-level construct of
     # the schema.

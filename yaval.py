@@ -80,9 +80,16 @@ def load_yaml(path, ctx):
     
 def load_schema(schema_path, ctx):
     report('Loading schema from %s.' % schema_path, ctx)
+    # This proves that the schema is well formed yaml, but nothing more.
     schema = load_yaml(schema_path, ctx)
     if schema:
+        # Prove that the schema matches the schema for yaval schemas.
         yaval_one_node(meta_schema, schema, ctx)
+        # Also prove that the schema makes sense, semantically. This
+        # is a step beyond schema validation, and is not technically
+        # necessary--but we do it to help schema writers debug and
+        # produce the best possible schemas.
+        
         if not ctx.error_count:
             return schema
     err("The schema itself is not valid, so it can't be used to test other docs.", ctx)
