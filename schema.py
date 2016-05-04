@@ -6,6 +6,8 @@ from datatypes import *
 schema_id_pat = re.compile(r'^(?i)[a-f0-9]{8}-?([a-f0-9]{4}-?){3}[a-f0-9]{12}$')
 schema_version_pat = re.compile(r'^(?i)\d+(\.\d+){0,2}(-[-_a-z]+)?$')
 
+_not_yet_inited = 'nOt yEt iNiTeD'
+
 
 class schema:
     def __init__(self, name, node_from_schema_yaml, parent=None):
@@ -16,6 +18,8 @@ class schema:
         else:
             self._node_root = node_from_schema_yaml            
         self.node = node_from_schema_yaml
+        self._expected_types = _not_yet_inited
+        self._regex = _not_yet_inited
         
     def get_xpath(self):
         if self.parent:
@@ -41,13 +45,19 @@ class schema:
             
     def has_def_for(self, keys):
         '''Does this schema have a definition for any key in a certain list?'''
+        if not is_map(self.node): return False
         if is_string(keys):
             keys = [keys]
         for k in keys:
             if k in self.node:
-                print('yes, schema has def for %s' % keys)
                 return True
-        print('no, schema doesnt have def for %s' % keys)
+        
+    def get_regex(self):
+        if self._regex == _not_yet_inited:
+            r = self.get_def_for('regex')
+            if r: r = re.compile(r)
+            self._regex = r
+        return self._regex
                    
     def get_expected_types(self):
         '''
@@ -59,30 +69,69 @@ class schema:
         schema imposes no constraints on the type of the yaml node it
         validates.
         '''
-        if self.has_def_for('keys'): return 'map'
-        if self.has_def_for('items'): return 'seq'
-        if self.has_def_for('fields'): return 'tuple'
-        if self.has_def_for('regex'): return 'str'
-        if self.has_def_for('multiple_of'): return 'int'
-        if self.has_def_for('type'): return self.node['type']
-        if self.has_def_for('default'): return str(type(self.node['default']))
-        if self.has_def_for(['max', 'min', 'xmax', 'xmin']): return ['int', 'float', 'date']
-        if self.has_def_for('extras'): return ['map', 'seq', 'tuple']
-        # If we get here, there are 2 possible semantics that might still obtain:
-        # 1. We're a degenerate schema with a single string that describes an expected data type.
-        # 2. We are a very unconstrained schema where the data type isn't guessable or
-        #    enforceable.
-        if is_string(self.node): return self.node
-                    
+        if self._expected_types == _not_yet_inited:
+            x = None
+            if self.has_def_for('keys'): x = 'map'
+            elif self.has_def_for(['max', 'min', 'xmax', 'xmin']): x = ['int', 'float', 'date']
+            elif self.has_def_for('regex'): x = 'str'
+            elif self.has_def_for('items'): x = 'seq'
+            elif self.has_def_for('type'): x = self.node['type']
+            elif self.has_def_for('default'): x = str(type(self.node['default']))
+            elif self.has_def_for('fields'): x = 'tuple'
+            elif self.has_def_for('multiple_of'): x = 'int'
+            elif self.has_def_for('extras'): x = ['map', 'seq', 'tuple']
+            # If we get here, there are 2 possible semantics that might still obtain:
+            # 1. We're a degenerate schema with a single string that describes an expected data type.
+            # 2. We are a very unconstrained schema where the data type isn't guessable or
+            #    enforceable.
+            elif is_string(self.node): x = self.node
+            self._expected_types = x
+        return self._expected_types
+        
+    def get_def_for(self, key):
+        if self.has_def_for(key):
+            try:
+                return self.node[key]
+            except:
+                print(str(self.node))
+                raise
+        
     def validate(self, yaml_node, node_xpath='/'):
         '''
         Compare a node in a yaml doc/stream to a schema, and return a list of
         errors. An empty list means the yaml is valid according to the schema.
         '''
         errors = []
+        # Convenience methods to unclutter code...
+        ae = lambda msg: errors.append(schema_violation(self, node_xpath, msg, yaml_node))
+        d = lambda key: self.get_def_for(key)
         expected = self.get_expected_types()
         actual = get_simple_type_name(yaml_node)
-        if expected != actual:
-            print('self.node = %s' % self.node)
-            errors.append(schema_violation(self, node_xpath, 'Expected node type to be %s, not %s.' % (expected, actual)))
+        has_type_error = False
+        if (is_string(expected) and actual != expected) or (is_seq(expected) and actual not in expected):
+            if is_seq(expected):
+                expected = '/'.join(expected)
+            ae('Expected node type to be %s, not %s.' % (expected, actual))
+            has_type_error = True
+        if not has_type_error:
+            r = self.get_regex()
+            if r and (not r.search(yaml_node)):
+                ae('Value "%s" does not match regex /%s/.' % (yaml_node, r.pattern))
+            n = d('multiple_of')
+            if n and (yaml_node % n != 0):
+                ae('Value is not a multiple of %d.' % n)
+            n = d('max')
+            if (n is not None) and (yaml_node > n):
+                ae('Value is greater than max (%s)' % n)
+            n = d('xmax')
+            if (n is not None) and (yaml_node >= n):
+                ae('Value is greater than or equal to xmax (%s)' % n)
+            n = d('min')
+            if (n is not None) and (yaml_node < n):
+                ae('Value is less than min (%s)' % n)
+            n = d('xmin')
+            if (n is not None) and (yaml_node <= n):
+                ae('Value is less than or equal to xmin (%s)' % n)
+            
+        
         return errors

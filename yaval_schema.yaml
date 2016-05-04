@@ -26,14 +26,12 @@ patterns:
   # unambiguous identity across versions, locations, and name changes.
   # Must be compared case-insensitive and with all punctuation ignored.
   - schema_id:
-    type: '' # ids are strings
     # format is compliant with RFC 4122
     regex: /^(?i)[a-f0-9]{8}-?([a-f0-9]{4}-?){3}[a-f0-9]{12}$/
     
   # Using semantic versioning to track evolution is a schema best practice;
   # see http://semver.org. Must be compared case-insensitive.
   - schema_version:
-    type: ''
     # format is 1-3 dot-delimited numbers, optionally followed by -<label>
     regex: /^(?i)\d+(\.\d+){0,2}(-[-_a-z]+)?$/
     
@@ -51,33 +49,46 @@ patterns:
       # values for type are yaml datatypes from its core or json schemas, as
       # well any key in the patterns section of the schema, or a uri that
       # grafts in another schema at this location.
-      - type: ''
-      # If a node_def contains a key named "items", the node it defines is a
+      - type: str
+      # If a node_def contains a key named "items", the node being defined is a
       # yaml sequence, and the value of "items" is a node_def that stipulates
       # structure of all items in the sequence. 
       - items: node_def
-      # If a node_def contains a key named "keys", the node it defines is a
+      # If a node_def contains a key named "keys", the node being defined is a
       # yaml map, and the value of "keys" is a sequence of node_def items
       # that the map may hold. Keys are optional by default; this can be
-      # overridden with the "required" list (see below). Notice that we are
-      # inside the "keys" key of a node_def right now, so we used this pattern
-      # to get here...
-      - keys: []
-      # If a node_def contains a key named "fields", the node it defines is a
-      # yaml sequence, and its parent node was also a sequence. The parent
-      # node effectively holds rows, and the node being defined holds columns.
-      # The value of "fields" is a sequence of node_def items that defines
-      # the columns. Unlike "keys", "fields" are always ordered and required.
-      # To allow extra fields beyond the optional ones (ragged rows in a
-      # table), use "extras" (see below).
-      - fields: []
-      # Lists keys that must appear in a map.
-      - required: []
+      # overridden with the "required_keys" list (see below). Notice that we
+      # are inside the "keys" key of a node_def right now, so we used this
+      # pattern to get here...
+      - keys: seq
+      # If a node_def contains a key named "fields", the node being defined is
+      # a tuple (represented as a yaml sequence), and the value of "fields" is
+      # a sequence of node_def items that provides names and semantic rules
+      # for the fields of the tuple. Unlike a map, fields in a tuple are
+      # ordered and are accessed by position rather than by key. Unlike a
+      # sequence, where schema constraints apply identically to all items,
+      # each field in a tuple has a distinct meaning.
+      #
+      # Tuples may be "ragged" (variadic) in two ways. Trailing fields may be
+      # be omitted by declaring only some of the fields to be required (see
+      # "required" below). Alternatively, the "extras" property may be defined,
+      # which allows any number of fields to be tacked on to the end of a
+      # tuple, as long as the extra fields do not need individualized schema
+      # constraints.
+      #
+      # One use case for "fields" is to define columns in a table. In this
+      # scenario, the parent of the node_def that contains "fields" would
+      # usually define some type of sequence to represent "rows".
+      - fields: seq
+      # Lists (by name) keys or fields that were defined in their respective
+      # "keys" or "fields" section, and that must appear. All others are
+      # optional.
+      - required: seq
       # If a node_def contains a key named "regex", then the node it defines
       # has string values. The regex constrains them. It must match somewhere
       # in the value (like grep); to force it to match the full value, begin
       # the regex with ^ and end it with $.
-      - regex: ''
+      - regex: str
       # For scalars that sort, this is the smallest acceptable value. No type
       # is specified, meaning that the definer of a schema can use it with any
       # type that makes sense.
@@ -93,19 +104,30 @@ patterns:
       - xmax
       # An upper bound on length. This may be used with any data type that has
       # an integral length: strings, sequences, maps, sets, and so forth.
-      - max_length: 0
+      - max_length: int
       # A lower bound on length.
-      - min_length: 0
+      - min_length: int
       # Require that a numeric value be a multiple of some smaller factor.
-      - multiple_of: 0
+      - multiple_of: int
       # This may be included to illustrate valid values.
-      - samples: []
+      - examples: seq
       # A value that should be assumed for the node, if none is provided.
       - default
       # If a node is a container (a sequence, a map, an enum, etc), this key
       # defines how extra members are handled. If "extras" does not appear,
       # then extra members are disallowed.
       - extras: node_def
+      # This is not used in validation, but it provides a way to associate
+      # human-friendly explanation with each major node in a schema. Unlike
+      # comments, tools that work with the schema may use this property to
+      # coach users.
+      - description: str
+      # This is a way to add machine-friendly metadata to a particular subset
+      # of the schema. For example, certain parts of the schema could be
+      # tagged as "advanced" or "experimental". Each tag is a short string.
+      # By convention, tags are inherited by more leafward portions of a
+      # schema unless the first alpha in the tag is 'x'.
+      - tags: seq
               
 # Okay, now that we have defined our patterns, here is the top-level entity
 # for the current schema--a data structure named "yaval_schema".
@@ -117,12 +139,15 @@ yaval_schema:
     # A yaval_schema has an optional attribute named "schema_version", and its
     # type is defined by the "schema_version" pattern above.
     - schema_version: schema_version
+    # A yaval_schema has an optional attribute named "min_yaval_version", and
+    # its type is defined by the "schema_version" pattern above.
+    - min_yaval_version: schema_version
     # A yaval_schema has an optional attribute named "patterns", which is a
-    # sequence.
+    # sequence of node_defs that will be referred to elsewhere in the schema.
     - patterns: []
-    # A yaval_schema has one additional attribute. Its name is not predefined,
-    # -- but whatever it is, this will be the root or top-level construct of
-    # the schema.
+    # A yaval_schema has one additional property besides those listed above.
+    # Its name is not predefined -- but whatever it is, it will be the root or
+    # top-level construct of the schema.
     - extras:
         max_length: 1
         min_length: 1

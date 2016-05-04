@@ -38,7 +38,11 @@ def assert_invalid(schema, text, *yaml_nodes):
                     break
             if found:
                 continue
-        msg = 'Expected to see an error containing the text "%s".' % text
+        if len(yn_text) < 100:
+            msg = 'With value of %s, expected' % repr(yn_text)
+        else:
+            msg = 'Expected'
+        msg += ' to see an error containing the text "%s".' % text
         if errors:
             msg += ' Instead, saw:\n  %s' % '\n  '.join([str(e) for e in errors])
         else:
@@ -66,7 +70,57 @@ class schema_test(unittest.TestCase):
         s = schema('any_int', yaml.load('int'))
         assert_valid(s, '123')
         assert_invalid(s, 'Expected node type to be int', 'hello', '{}', '[]', '3.14')
+        
+    def test_min_out_of_range(self):
+        s = schema('min_25', yaml.load('min: 25'))
+        assert_valid(s, '25', '30', '!!float 3.2e7')
+        assert_invalid(s, 'less than', '24', '-3', '0', '!!float -3.2e7', '!!float 3.2e-7')
+        assert_invalid(s, 'node type', 'hello')
+        
+    def test_min_0(self):
+        s = schema('min_0', yaml.load('min: 0'))
+        assert_invalid(s, 'less than', '-1')
+        
+    def test_min_0dot0(self):
+        s = schema('min_0dot0', yaml.load('min: 0.0'))
+        assert_invalid(s, 'less than', '-1')
+        
+    def test_xmin_out_of_range(self):
+        s = schema('xmin_25', yaml.load('xmin: 25'))
+        assert_valid(s, '26', '30', '!!float 3.2e7')
+        assert_invalid(s, 'less than or equal to', '25', '25.0', '-3', '0', '!!float -3.2e7', '!!float 3.2e-7')
+        assert_invalid(s, 'node type', 'hello')
+        
+    def test_xmin_0(self):
+        s = schema('xmin_0', yaml.load('xmin: 0'))
+        assert_invalid(s, 'less than or equal to', '0')
+        
+    def test_max_out_of_range(self):
+        s = schema('max_25', yaml.load('max: 25'))
+        assert_valid(s, '2', '10', '3.14', '0', '-3', '!!float 3.2e-7')
+        assert_invalid(s, 'greater than', '34', '!!float 3.2e7')
+        assert_invalid(s, 'node type', 'hello')
+        
+    def test_max_0(self):
+        s = schema('max_0', yaml.load('max: 0'))
+        assert_invalid(s, 'greater than', '1')
       
+    def test_xmax_out_of_range(self):
+        s = schema('xmax_25', yaml.load('xmax: 25'))
+        assert_valid(s, '2', '10', '3.14', '0', '-3', '!!float 3.2e-7')
+        assert_invalid(s, 'greater than or equal to', '25', '25.0', '34', '!!float 3.2e7')
+        assert_invalid(s, 'node type', 'hello')
+      
+    def test_xmax_0(self):
+        s = schema('xmax_0', yaml.load('xmax: 0'))
+        assert_invalid(s, 'greater than or equal to', '0')
+        
+    def test_multiple_of(self):
+        s = schema('mult3', yaml.load('multiple_of: 3'))
+        assert_valid(s, '3', '6', '7611849', '0', '-3')
+        assert_invalid(s, 'not a multiple of', '5', '2', '-26')
+        assert_invalid(s, 'Expected node type to be int', '3.14', '27.0', 'hello', '{}', '[]')
+        
     def test_yaval_schema_validates_itself(self):
         ys = get_yaval_schema()
         ys.validate(get_yaval_schema_yaml(), '/')
