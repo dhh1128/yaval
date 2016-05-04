@@ -1,0 +1,3 @@
+schema validations:
+ - string schemas use valid types
+ - mutually exclusive keys (min and xmin, for example, or items and keys)
