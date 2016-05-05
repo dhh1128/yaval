@@ -9,17 +9,18 @@ schema_version: "1.0"
 #      its own structure according to yaval rules. In other words,
 #      the yaval schema is, itself, a yaval schema.
 # This overloaded, recursive sort of structure can get a bit confusing, but
-# don't get lost in the details. It's simpler than it looks.
+# don't get lost in the details. It's simpler than it looks. To start from
+# a high level, look for the "yaval_schema" key near the bottom.
 
 # What is the minimum version of the yaval spec that this schema validates
 # against? The expectation is that this schema (doc) should validate against
 # any version of the spec that has the same major version number.
 min_yaval_version: "1.0"
 
-# The "patterns" attribute defines one or more structures that we use to build
+# The "types" property defines one or more structures that we use to build
 # more complex structures. Typically, schemas will define low-level constructs
 # first, and then develop higher-level constructs from those building blocks.
-patterns:
+types:
   
   # A schema_id may not be desirable for schema fragments -- but it is highly
   # recommended for standalone, complete schemas. It gives schemas an
@@ -43,17 +44,19 @@ patterns:
     # it may contain.
     keys:
       # It is possible to explicitly declare the data type for a node. Often
-      # this is unnecessary, though, because some other attribute of the node
-      # implies its type. For example, nodes that have a "keys" attribute
-      # are maps; nodes that have an "items" attribute are sequences. Valid
+      # this is unnecessary, though, because some other property of the node
+      # implies its type. For example, nodes that have a "keys" property are
+      # maps; nodes that have an "items" attribute are sequences. Valid
       # values for type are yaml datatypes from its core or json schemas, as
       # well any key in the patterns section of the schema, or a uri that
       # grafts in another schema at this location.
       - type: str
+      
       # If a node_def contains a key named "items", the node being defined is a
       # yaml sequence, and the value of "items" is a node_def that stipulates
       # structure of all items in the sequence. 
       - items: node_def
+      
       # If a node_def contains a key named "keys", the node being defined is a
       # yaml map, and the value of "keys" is a sequence of node_def items
       # that the map may hold. Keys are optional by default; this can be
@@ -61,6 +64,16 @@ patterns:
       # are inside the "keys" key of a node_def right now, so we used this
       # pattern to get here...
       - keys: seq
+      
+      # If a node_def contains a key named "key_type", the node being defined
+      # is a yaml map, and the named type is the type for all keys in the map.
+      - key_type: str
+      
+      # If a node_def contains a key named "value_type", the node being defined
+      # is a yaml map, and the named type is the type for all values in the map.
+      # This key cannot be used inside "items"; use "items: {type: x}" instead.
+      - value_type: str
+      
       # If a node_def contains a key named "fields", the node being defined is
       # a tuple (represented as a yaml sequence), and the value of "fields" is
       # a sequence of node_def items that provides names and semantic rules
@@ -80,74 +93,112 @@ patterns:
       # scenario, the parent of the node_def that contains "fields" would
       # usually define some type of sequence to represent "rows".
       - fields: seq
+      
       # Lists (by name) keys or fields that were defined in their respective
       # "keys" or "fields" section, and that must appear. All others are
       # optional.
       - required: seq
+      
       # If a node_def contains a key named "regex", then the node it defines
       # has string values. The regex constrains them. It must match somewhere
       # in the value (like grep); to force it to match the full value, begin
       # the regex with ^ and end it with $.
       - regex: str
+      
       # For scalars that sort, this is the smallest acceptable value. No type
       # is specified, meaning that the definer of a schema can use it with any
       # type that makes sense.
       - min
+      
       # For scalars that sort, this is the exclusive min--the largest value
       # that is less than what's acceptable. For example, floating point
       # ratios that must be greater than 0 would declare an xmin of 0.0.
       - xmin
+      
       # For scalars that sort, this is the largest acceptable value.
       - max
+      
       # For scalars that sort, this is the exclusive max--the smallest value
       # that is greater than what's acceptable.
       - xmax
+      
       # An upper bound on length. This may be used with any data type that has
       # an integral length: strings, sequences, maps, sets, and so forth.
       - max_length: int
+      
       # A lower bound on length.
       - min_length: int
+      
       # Require that a numeric value be a multiple of some smaller factor.
       - multiple_of: int
+      
       # This may be included to illustrate valid values.
       - examples: seq
+      
       # A value that should be assumed for the node, if none is provided.
       - default
+      
       # If a node is a container (a sequence, a map, an enum, etc), this key
       # defines how extra members are handled. If "extras" does not appear,
       # then extra members are disallowed.
       - extras: node_def
+      
       # This is not used in validation, but it provides a way to associate
       # human-friendly explanation with each major node in a schema. Unlike
       # comments, tools that work with the schema may use this property to
       # coach users.
       - description: str
+      
       # This is a way to add machine-friendly metadata to a particular subset
       # of the schema. For example, certain parts of the schema could be
-      # tagged as "advanced" or "experimental". Each tag is a short string.
-      # By convention, tags are inherited by more leafward portions of a
-      # schema unless the first alpha in the tag is 'x'.
+      # tagged as "advanced" or "experimental" or "deprecated" -- and tools
+      # that work with the schema could then customize behavior accordingly.
+      # These customized behaviors are application-defined and explicitly
+      # beyond the scope of schema validation. However, yaval defines the
+      # mechanism as a way to make schemas more powerful, in the hopes that
+      # schema writers will take advantage. Tag use cases might include things
+      # like identifying data with privacy concerns (PII), security issues
+      # (such as passwords that shouldn't be echoed), or copyright
+      # restrictions; looking for contradictory tags as a way to find illogical
+      # semantics; improving the quality of warnings or error messages, and
+      # so forth.
+      #
+      # By convention, tags are lower-case, pure ascii, whole-word-or-phrase
+      # English adjectives, and these conventions are encouraged because they
+      # should require little documentation, and they reduce needless variety
+      # ("deprecate", "dep", or Spanish "deprecado" all coalesce to the
+      # conventional "deprecated"). However, these conventions are not
+      # especially consequential.
+      #
+      # Tags may have a prefix that specifies how their semantics propagate.
+      # This prefix is not part of the tag, proper -- a "deprecated" tag in
+      # one place, and a "+deprecated" tag in another place, both attach the
+      # same tag. What is different is the manner of attachment and semantic
+      # propagation. The following prefixes have predefined meaning:
+      #   +  tag the atachment point, plus everything more "leafward"
+      #   -  negate an inherited tag and terminate its leafward propagation
       - tags: seq
+      
+      # This is a way to define the meaning of tags; typically it would only
+      # appear on the top node of a schema, even though tags might appear
+      # throughout. The content is a map of tag: description pairs. Tags may
+      # be used without defs, so including this section is entirely optional.
+      - tag_defs: seq
               
 # Okay, now that we have defined our patterns, here is the top-level entity
-# for the current schema--a data structure named "yaval_schema".
+# for the current schema--a data structure named "yaval_schema" which is
+# a map having keys like "schema_id", "schema_version", etc.
 yaval_schema:
   keys:
-    # A yaval_schema has an optional attribute named "schema_id", and its type
-    # is defined by the "schema_id" pattern above.
-    - schema_id: schema_id
-    # A yaval_schema has an optional attribute named "schema_version", and its
-    # type is defined by the "schema_version" pattern above.
-    - schema_version: schema_version
-    # A yaval_schema has an optional attribute named "min_yaval_version", and
-    # its type is defined by the "schema_version" pattern above.
-    - min_yaval_version: schema_version
-    # A yaval_schema has an optional attribute named "patterns", which is a
-    # sequence of node_defs that will be referred to elsewhere in the schema.
-    - patterns: []
-    # A yaval_schema has one additional property besides those listed above.
-    # Its name is not predefined -- but whatever it is, it will be the root or
-    # top-level construct of the schema.
-    - extras:
-        max_length: 1
-        min_length: 1
+    # A yaval_schema has a bunch of pre-defined but optional properties. Each
+    # has a name, structure and semantics defined in "types" above.
+    - schema_id: {type: schema_id}
+    - schema_version: {type: schema_version}
+    - min_yaval_version: {type: schema_version}
+    - tags: {items: {type: str}}
+    - tag_defs: {items: {key_type: str, value_type: str}}
+    - types: {items: {type: node_def}}
+    # A yaval_schema has one additional property besides those listed in the
+    # preceding lines.  Its name is not predefined -- but whatever it is, it
+    # will be the root or top-level construct of the schema.
+    - extras: {max_length: 1, min_length: 1}

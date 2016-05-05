@@ -20,6 +20,8 @@ class schema_violation:
                 value = '{...}'
             elif is_seq(value):
                 value = '[...]'
+            elif is_string(value):
+                value = repr(value)
             text += ' with value=%s' % value
         self.text = text + ' violates %s. %s' % (schema_xpath, msg)
     def __str__(self):

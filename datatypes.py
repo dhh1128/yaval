@@ -31,6 +31,9 @@ def is_seq(obj):
 def is_tuple(obj):
     return type(obj) is tuple_type
 
+def is_bool(obj):
+    return type(obj) is bool_type
+
 def is_scalar(obj):
     t = type(obj)
     return not (t is map_type or t is seq_type or t is tuple_type)

@@ -2,27 +2,6 @@ import os, sys, argparse, yaml, traceback, re
 
 verbose = False            
     
-
-meta_schema = yaml.load(
-'''
-schema_id: b1dcd6d9-9680-4fb7-f569-616758d9b877
-schema_name: yaval_schema
-schema_version: 1.0
-
-keys:
-  type: !!str
-  min_length: 1
-  regex: /[-_a-zA-Z, 0-9]+/
-  
-schema_id:
-  type: !!str
-  regex: /[a-fA-F0-9]{8}-?([a-fA-F0-9]{4}-?){3}[a-fA-F0-9]{12}/
-  
-schema_version:
-  type: !!str
-  regex: /\d+(\.\d+){,3}(-[a-zA-Z+])/
-''')
-
 class validation_context:
     def __init__(self, path):
         self.path = path
