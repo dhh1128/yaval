@@ -104,14 +104,13 @@ class schema:
                 check_for(['min_length', 'max_length'], ['str', 'seq', 'map', 'tuple'])
                 check_for('extras', ['map', 'seq', 'tuple'])
                 self._impled_type_map = x
-                print('implied type map for %s is %s' % (self.node, self._impled_type_map))
                 if not x:
                     self._expected_types = None
                 else:
                     keys = x.keys()
-                    intersect = keys[0]
+                    intersect = x[keys[0]]
                     for i in xrange(1,len(keys)):
-                        intersect = [k for k in intersect if k in keys[i]]
+                        intersect = [k for k in intersect if k in x[keys[i]]]
                     self._expected_types = sorted(intersect) # sort for consistency
         return self._expected_types
         

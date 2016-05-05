@@ -1,3 +1,6 @@
 schema validations:
  - string schemas use valid types
  - mutually exclusive keys (min and xmin, for example, or items and keys)
+ - convention in tags for overriding, subtracting, stopping propagation
+ - method on schema to figure out which tags apply
+ - cmdline option to yaval to validate subset of schema marked (or not marked) by a tag

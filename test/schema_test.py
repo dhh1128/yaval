@@ -78,7 +78,7 @@ def assert_expected_types(schema_txt, expected_types):
         msg = 'Expected schema of %s to report expected types = %s, but got %s instead.' % (
             str(s.node), expected_types, actual_types)
         raise Exception(msg)
-    print('Schema of %s correctly reported expected types = %s.' % (str(s.node), expected_types))        
+    #print('Schema of %s correctly reported expected types = %s.' % (str(s.node), expected_types))        
         
  
 class schema_test(unittest.TestCase):
