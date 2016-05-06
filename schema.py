@@ -19,7 +19,7 @@ class schema:
             self._node_root = node_from_schema_yaml            
         self.node = node_from_schema_yaml
         self._expected_types = _not_yet_inited
-        self._impled_type_map = None
+        self._implied_type_map = None
         self._regex = _not_yet_inited
         
     def get_xpath(self):
@@ -103,7 +103,7 @@ class schema:
                 check_for(['max', 'min', 'xmax', 'xmin'], ['int', 'float', 'date'])
                 check_for(['min_length', 'max_length'], ['str', 'seq', 'map', 'tuple'])
                 check_for('extras', ['map', 'seq', 'tuple'])
-                self._impled_type_map = x
+                self._implied_type_map = x
                 if not x:
                     self._expected_types = None
                 else:
@@ -142,12 +142,22 @@ class schema:
         if expected is None:
             pass
         elif not expected:
-            ae('No datatype permits all the properties')
+            msg = 'No type fits all the properties specified in the schema:'
+            for key in self._implied_type_map:
+                msg += '\n    - %s implies type %s' % (key, '|'.join(self._implied_type_map[key]))
+            ae(msg)
+            has_type_error = True
         elif actual not in expected:
             expected = '|'.join(expected)
             ae('Expected node type to be %s, not %s.' % (expected, actual))
             has_type_error = True
+        # Make sure types resolve.
+        if not has_type_error:
+            pass
         
+        # If the type isn't right, many of our validation tests are useless. For
+        # example, we can't test a regex against a value that's not a string.
+        # Only do the next block of tests if they are likely to add value.
         if not has_type_error:
             r = self.get_regex()
             if r and (not r.search(yaml_node)):

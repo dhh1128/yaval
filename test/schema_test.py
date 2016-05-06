@@ -164,6 +164,10 @@ class schema_test(unittest.TestCase):
         assert_expected_types('max_length: 1\nitems: x', ['seq'])
         assert_expected_types('multiple_of: 1\nregex: x', [])
         
+    def test_expected_types_are_validated(self):
+        s = schema('impossible', yaml.load('multiple_of: 1\nregex: x'))
+        assert_invalid(s, 'No type fits', '3')
+
     def test_yaval_schema_validates_itself(self):
         ys = get_yaval_schema()
         ys.self_validate()
@@ -176,10 +180,7 @@ class schema_test(unittest.TestCase):
         assert_invalid(ys, '[]', 'must be a map')
         
     def test_yaval_schema_allows_exactly_one_extra_key(self):
-        return
         ys = get_yaval_schema()
-        #import pdb
-        #pdb.set_trace()
         assert_invalid(ys, 'x: 0\ny: 1', 'exactly one key')
 
 
