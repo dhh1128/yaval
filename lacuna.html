@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>yaval by dhh1128</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>yaval</h1>
+        <p>yaml schema language and validator</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/dhh1128/yaval" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/dhh1128/yaval/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/dhh1128/yaval/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h3>
+<a id="error-handling" class="anchor" href="#error-handling" aria-hidden="true">
+<span aria-hidden="true" class="octicon octicon-link"></span></a>Lacunas</h3>
+
+<p>A <em>lacuna</em> is a semantic gap--a place where you can express an idea in one language, but not
+another.</p>
+<p>Formal languages (e.g., schemas, programming languages) all have a <em>lacuna humana</em> in that their scope
+of concern is limited to just those issues that will be computed against--they don't express semantics of concern
+to human behavior with respect to the code. For example, name a programming language or a data/serialization format
+that lets you mark a section of content as "not ready for prime time" (or "needs more tests" or "possibly
+contaminated by IP issues" or "addresses requirement X from document Y", etc). Comments don't count, and
+annotations aren't quite sufficient, for reasons that I explore in greater detail in a
+<a href="https://codecraft.co/2014/07/16/lacunas-everywhere/" target="external">series of blog posts.</a></p>
+<p>Most of the time, this gap doesn't bother us, because we solve human problems on our own, and leave
+dull computing to the code. The two worlds don't mingle, and that's okay.</p>
+<p>But sometimes, we want to do something more ambitious...</p>
+<p>Recently, I wanted to create threat models for a large collection of independent codebases. In each
+codebase, I wanted the threat model doc to be machine-parseable, and I wanted it to include certain key info such as
+a list of actors in the system and a list of potential abuse cases. I wanted the threat models to hyperlink
+to pieces of code that were especially interesting. And I wanted my build system to enforce the correctness
+of each threat model and its hyperlinks. Plus, over time, I wanted to raise the bar on the threat models,
+(not necessarily at the same time for each codebase), requiring additional layers of detail. I also wanted
+to mark certain subsets of the threat model as being owned by a particular person or group, or as requiring
+committee review, etc.</p>
+<p>YAML was an obvious choice for the format of my threat model docs, I could see how a YAML schema
+validator would give me most of what I wanted. But I couldn't see how to add the extra layer of semantics
+that would let me compute dynamic subsets of the docs that required attention from a specific person, or
+that created or satisfied hyperlinkable requirements.</p>
+<p>It occurred to me that I might get close to what I needed if I could tag certain yaml nodes with
+extra semantics. Think of social media hashtags: if I could write a schema where a particular subsection
+was marked with <code>#requiredforbeta</code>, and if, as I approached beta, my schema validator could
+be told to start enforcing that docs contained that subsection, I would be close.</p>
+      </section>
+      <footer>
+        <p><a href="index.html">Overview</a></p>
+        <p><a href="tutorial.html">Tutorial</a></p>
+        <p><a href="api.html">API</a></p>
+        <p><a href="faq.html">FAQ</a></p>
+        <p>Project maintained by <a href="https://github.com/dhh1128">dhh1128</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>

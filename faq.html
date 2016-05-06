@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>yaval by dhh1128</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>yaval</h1>
+        <p>yaml schema language and validator</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/dhh1128/yaval" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/dhh1128/yaval/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/dhh1128/yaval/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h3>
+<a id="faq" class="anchor" href="#faq" aria-hidden="true">
+<span aria-hidden="true" class="octicon octicon-link"></span></a>FAQ</h3>
+<ol>
+  <li><a href="#install">How do I install yaval?</a></li>
+  <li><a href="#versions">What versions of YAML does yaval support?</a></li>
+  <li><a href="#reinvent">Why re-invent the wheel instead of just enhancing json-schema or kwalify?</a></li>
+</ol>
+<dl>
+<dt>
+<a id="install" class="anchor" href="#versions" aria-hidden="true">
+<span aria-hidden="true" class="octicon octicon-link"></span></a>How do I install yaval?</dt>
+<dd>
+<p>The yaval tool is a python script. It doesn't require any fancy installation; just get the
+code and run it. See the <a href="index.html#tool">Tool section</a> of the overview.</p>
+to have PyYAML installed (<code>pip install PyYaml</code>). Yaval schemas are yaml 1.1 documents. The yaval tool uses python's PyYAML library, which does not
+yet support yaml 1.2. In practice, this distinction is mostly unimportant.</p>
+<p>The documents that yaval validates must be parseable by a yaml 1.1 parser as well, which means
+that old yaml may not work, and corner-case yaml 1.2 might also cause hiccups. If we complete
+the task of adding a C++ impl of yaval based on yaml-cpp, we will have full yaml 1.2 support.</p>
+</dd>
+<dt>
+<a id="versions" class="anchor" href="#versions" aria-hidden="true">
+<span aria-hidden="true" class="octicon octicon-link"></span></a>What versions of YAML does yaval support?</dt>
+<dd>
+<p>Yaval schemas are yaml 1.1 documents. The yaval tool uses python's PyYAML library, which does not
+yet support yaml 1.2. In practice, this distinction is mostly unimportant.</p>
+<p>The documents that yaval validates must be parseable by a yaml 1.1 parser as well, which means
+that old yaml may not work, and corner-case yaml 1.2 might also cause hiccups. If we complete
+the task of adding a C++ impl of yaval based on yaml-cpp, we will have full yaml 1.2 support.</p>
+</dd>
+<dt>
+<a id="reinvent" class="anchor" href="#reinvent" aria-hidden="true">
+<span aria-hidden="true" class="octicon octicon-link"></span></a>Why re-invent the wheel instead of just enhancing json-schema or kwalify?</dt>
+<dd>
+<p>The less interesting answer is that all the schema alternatives we looked at felt like
+they were either too clunky or too verbose, and I couldn't find a python API for
+validation.</p>
+<p>The deeper answer is the <a href="lacuna.html"><em>lacuna humana</em> problem</a> that no schema language or
+serialization spec has solved. Until now...</p>
+</dd>
+</dl>
+      </section>
+      <footer>
+        <p><a href="index.html">Overview</a></p>
+        <p><a href="tutorial.html">Tutorial</a></p>
+        <p><a href="api.html">API</a></p>
+        <p><a href="faq.html">FAQ</a></p>
+        <p>Project maintained by <a href="https://github.com/dhh1128">dhh1128</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>

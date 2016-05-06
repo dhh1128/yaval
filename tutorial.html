@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>yaval by dhh1128</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>yaval</h1>
+        <p>yaml schema language and validator</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/dhh1128/yaval" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/dhh1128/yaval/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/dhh1128/yaval/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h3>
+<a id="top" class="anchor" href="#top" aria-hidden="true">
+<span aria-hidden="true" class="octicon octicon-link"></span></a>Tutorial</h3>
+
+<p>Suppose you are writing software to capture the wisdom of the world's great chefs, and your
+system needs to exchange recipes. You plan to store the recipes in YAML, but you want to make
+sure everybody agrees on what a valid recipe looks like.</p>
+
+<h4>Step 1: simple datatype</h4>
+<p>Let's start with the simplest possible approach; we will let recipes be free-from text.
+Create a file named <code>recipe-schema.yaml</code> and add a single line to it:</p>
+
+<pre>str</pre>
+
+<p>When yaval reads this schema, it understands that doc content must a yaml <code>!!str</code>
+type. (Don't worry about the lack of <code>!!</code> in the schema right now...) Let's just create
+a sample recipe doc and validate it. Open a text editor and save the following as <code>mud-pie.yaml</code>:</p>
+
+<pre>
+1 liter of mud
+1 liter of water
+Combine ingredients. Bake for 10 minutes at 175 C (350 F).
+</pre>
+
+<p>Let's see if our recipe is valid, according to yaval:</p>
+
+<pre>$> yaval recipe-schema.yaml mud-pie.yaml
+OK</pre>
+
+<p>Yum! Now we're cooking!</p>
+
+<h4>Step 2: a little structure</h4>
+
+<p>Of course, free-form text is too loosey-goosey. Let's make the schema more granular. For
+example, let's say that a <em style="color:purple">recipe</em> is a structure that contains
+a <em style="color:purple">list</em> of <em style="color:purple">ingredients</em>,
+accompanied by <em style="color:purple">instructions</em> about how to combine them. Edit
+<code>recipe-schema.yaml</code> so it looks like this (you can omit the <span style="color:#686">#comments</span>):</p>
+
+<pre>recipe: <span style="color:#686"># top node is named "recipe"</span>
+  keys: <span style="color:#686"># presence of this key implies that recipe is a map</span>
+    ingredients: <span style="color:#686"># one key under recipe is named "ingredients"</span>
+      items: str <span style="color:#686"># it is a list (implied by "items") of str</span>
+    instructions: str <span style="color:#686"># the other key, "instructions", is a str</span></pre>
+
+<p>Of course, if we validate our old doc against this new schema, yaval will complain. (Try
+it and see.) So let's update our recipe:</p>
+
+<pre>
+ingredients:
+- 1 liter of mud
+- 1 liter of water
+instructions: >
+  Combine ingredients. Bake for 10 minutes at 175 C (350 F).
+</pre>
+
+<h4>Principles</h4>
+
+<p>Let's step back from the details for a minute, and see if we can generalize. A yaval
+schema specifies how yaml nodes are structured. One way to do that, if the structure is
+super simple, is to just name a datatype; this is what we did in Step 1, when the schema
+merely said <code>str</code>. This mechanism is no longer used to define a <em style="color:purple">recipe</em> in
+Step 2, but it <em>is</em> used to specify the structure of <em style="color:purple">instructions</em>.
+See the <code>str</code> there? And see it as the value for <code>items</code> as well?
+All of these are simple definitions of nodes.</p>
+<p>The other way to specify structure in a yaval schema is to provide a yaml mapping for the
+node you're describing. The <em>node being described</em> may not be a mapping (in fact,
+<em style="color:purple">ingredients</em> is a yaml sequence), but in the schema, its
+<em>description</em> is a mapping.</p>
+<p>If you use a mapping in a schema to define a node's structure, then the mapping's keys
+tell yaval what sort of structure you're describing. The <code>keys</code> implies that
+in the document, the node being defined is a map; the <code>items</code> property
+implies a sequence (list). There are many other keys you can use, and there's also
+a way to force the data type explicitly. You can get details in the full docs or the
+examples, but for now, just put a bookmark there...</p>
+
+<h4>Step 3: adding constraints</h4>
+
+<p>Schemas really get useful when you constrain content much more tightly than
+we've done so far. Let's say, for example, that we want to require all recipes to
+have at least 2 ingredients. We add constraints as keys under the mapping that
+describes a node:</p>
+
+<pre>recipe:
+  keys:
+    ingredients:
+      <span style="color:#686"># We can't just name a datatype, so items now becomes
+      a mapping, and its properties add extra detail about it,
+      including our new constraint...</span>
+      items: 
+        type: str <span style="color:#686"># move type decl here instead of old loc</span>
+        min_length: 2 <span style="color:#686"># declare another constraint</span>
+    instructions: str</pre>
+
+<p>Many other constraints are possible: max_length, regex, max/min/xmax/xmin (for numerics
+and timestamps), multiple_of (for integers)... We can also control which keys in a mapping
+node are required (possibly in combinations, such as: if A, then B and D; if C, then B and E).
+We can force uniqueness or order, even with unnamed fields. And we can specify extensibility
+(whether undefined keys or fields are allowed, and if so, what their constraints should be).</p>
+
+      </section>
+      <footer>
+        <p><a href="index.html">Overview</a></p>
+        <p><a href="tutorial.html">Tutorial</a></p>
+        <p><a href="api.html">API</a></p>
+        <p><a href="faq.html">FAQ</a></p>
+        <p>Project maintained by <a href="https://github.com/dhh1128">dhh1128</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
